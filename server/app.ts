@@ -4,6 +4,7 @@ import expressLayouts from "express-ejs-layouts";
 import routes from "./routes";
 import dotenv from "dotenv";
 import session from "express-session";
+import { Analytics } from "@vercel/analytics/next"
 
 const app: Application = express();
 const PORT: number = parseInt(process.env.PORT || "3000", 10);
