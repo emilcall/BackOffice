@@ -1,0 +1,65 @@
+<section class="afgewerkt-container">
+    <div class="afgewerkt-header-row">
+        <h2 class="afgewerkt-title">Afgewerkte bestellingen</h2>
+        <a href="/orders" class="btn-primary">Terug naar alle bestellingen</a>
+    </div>
+    <table class="afgewerkt-table">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Datum & Tijd</th>
+                <th>Totaalprijs</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (orders.length === 0) { %>
+                <tr>
+                    <td colspan="4">Geen afgewerkte bestellingen gevonden.</td>
+                </tr>
+            <% } else { %>
+                <% orders.forEach(order => { 
+                    // Bereken totaalprijs
+                    let totaal = 0;
+                    if (order.items) {
+                        order.items.forEach(item => {
+                            totaal += item.price * item.quantity;
+                        });
+                    }
+                %>
+                    <tr>
+                        <td><%= order.id %></td>
+                        <td><%= new Date(order.created_at).toLocaleString() %></td>
+                        <td>€<%= totaal.toFixed(2) %></td>
+                        <td>
+                            <button type="button" class="btn-primary" onclick="toggleDetails('<%= order.id %>')">Toon producten</button>
+                        </td>
+                    </tr>
+                    <tr id="details-<%= order.id %>" class="order-details-row" style="display:none;">
+                        <td colspan="4">
+                            <strong>Bestelde producten:</strong>
+                            <ul>
+                                <% if(order.items && order.items.length > 0) { %>
+                                    <% order.items.forEach(item => { %>
+                                        <li>
+                                            <%= item.products ? item.products.name : 'Onbekend product' %>
+                                            (aantal: <%= item.quantity %>, prijs: €<%= item.price.toFixed(2) %>)
+                                        </li>
+                                    <% }) %>
+                                <% } else { %>
+                                    <li>Geen producten gevonden.</li>
+                                <% } %>
+                            </ul>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+    <script>
+        function toggleDetails(orderId) {
+            const row = document.getElementById('details-' + orderId);
+            row.style.display = row.style.display === 'none' ? '' : 'none';
+        }
+    </script>
+</section>

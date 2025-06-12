@@ -1,0 +1,81 @@
+<section class="orders-container">
+    <div class="orders-header-row">
+        <h2 class="orders-title">Bestellingen</h2>
+        <a href="/orders/completed" class="btn-primary">Afgewerkte bestellingen</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Datum</th>
+                <th>Status</th>
+                <th>Actie</th>
+                <th>Totaalprijs</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% orders.forEach(order => { 
+                let totaal = 0;
+                order.items.forEach(item => { totaal += item.price * item.quantity; });
+                const alleProductenKlaar = order.items.length > 0 && order.items.every(item => item.status === 'completed');
+            %>
+                <tr id="order-row-<%= order.id %>">
+                    <td><%= order.id %></td>
+                    <td><%= new Date(order.created_at).toLocaleString() %></td>
+                    <td>
+                        <% if(order.status === 'completed') { %>
+                            <span class="status-label status-completed">Afgewerkt</span>
+                        <% } else if (alleProductenKlaar) { %>
+                            <span class="status-label status-ready">Staat klaar</span>
+                        <% } else { %>
+                            <span class="status-label status-pending">In behandeling</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <button class="btn-primary" onclick="toggleDetails('<%= order.id %>')">Details</button>
+                        <form action="/orders/delete/<%= order.id %>" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-primary" onclick="return confirm('Weet je zeker dat je deze bestelling wilt verwijderen?')">Verwijder</button>
+                        </form>
+                    </td>
+                    <td>
+                        €<%= totaal.toFixed(2) %>
+                    </td>
+                </tr>
+                <tr id="details-<%= order.id %>" class="order-details-row" style="display:none;">
+                    <td colspan="5">
+                        <strong>Bestelde producten:</strong>
+                        <ul>
+                            <% order.items.forEach(item => { %>
+                                <li style="display: flex; align-items: center; gap: 8px;">
+                                    <form action="/order_items/status/<%= item.id %>?open=<%= order.id %>" method="POST" style="display:inline;">
+                                        <input type="checkbox" name="status" value="completed" onchange="this.form.submit()" <%= item.status === 'completed' ? 'checked' : '' %> >
+                                    </form>
+                                    <%= item.products ? item.products.name : 'Onbekend product' %>
+                                    (aantal: <%= item.quantity %>, prijs: €<%= item.price.toFixed(2) %>)
+                                </li>
+                            <% }) %>
+                        </ul>
+                        <% if (alleProductenKlaar && order.status !== 'completed') { %>
+                            <form action="/orders/status/<%= order.id %>" method="POST" style="margin-top: 12px;">
+                                <input type="hidden" name="status" value="completed">
+                                <button type="submit" class="btn-primary">Verplaats naar afgewerkte bestellingen</button>
+                            </form>
+                        <% } %>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <script>
+        function toggleDetails(orderId) {
+            const row = document.getElementById('details-' + orderId);
+            row.style.display = row.style.display === 'none' ? '' : 'none';
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.location.hash.startsWith('#details-')) {
+                const orderId = window.location.hash.replace('#details-', '');
+                toggleDetails(orderId);
+            }
+        });
+    </script>
+</section>

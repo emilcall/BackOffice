@@ -1,0 +1,82 @@
+<section class="categories-container"
+  <%= (typeof message !== "undefined" && message) ? `data-message="${encodeURIComponent(message)}"` : "" %>
+  <%= (typeof error !== "undefined" && error) ? `data-error="${encodeURIComponent(error)}"` : "" %>
+>
+    <div id="popup-message" style="display:none;"></div>
+    <div id="popup-error" style="display:none;"></div>
+    <div id="confirm-popup" style="display:none;">
+        <div class="popup-content">
+            <p id="confirm-message">Weet je zeker dat je deze categorie wilt verwijderen?</p>
+            <button id="confirm-yes" class="btn-primary">Ja</button>
+            <button id="confirm-no" class="btn-primary">Nee</button>
+        </div>
+    </div>
+    <div class="categories-header-row">
+        <h2 class="categories-title">Categorieën</h2>
+        <a href="/products" class="btn-primary">Alle producten</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Naam</th>
+                <th>Acties</th>
+                <th>Verwijderen</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% categories.forEach(category => { %>
+                <tr>
+                    <td>
+                        <%= category.name %>
+                    </td>
+                    <td>
+                        <a href="/categories/<%= category.id %>/products">Ga naar</a>
+                    </td>
+                    <td>
+                        <form action="/categories/delete/<%= category.id %>" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-primary delete-btn">Verwijder</button>
+                        </form>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <form action="/categories/add" method="POST" class="add-category-form">
+        <input type="text" name="name" placeholder="Nieuwe categorie" required>
+        <button type="submit" class="btn-primary">Toevoegen</button>
+    </form>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const container = document.querySelector('.categories-container');
+    const popupMessage = document.getElementById('popup-message');
+    const popupError = document.getElementById('popup-error');
+    if (container && container.dataset.message && popupMessage) {
+        popupMessage.textContent = decodeURIComponent(container.dataset.message);
+        popupMessage.style.display = "block";
+        setTimeout(() => popupMessage.style.display = "none", 4000);
+    }
+    if (container && container.dataset.error && popupError) {
+        popupError.textContent = decodeURIComponent(container.dataset.error);
+        popupError.style.display = "block";
+        setTimeout(() => popupError.style.display = "none", 4000);
+    }
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            const popup = document.getElementById('confirm-popup');
+            popup.style.display = 'flex';
+            document.getElementById('confirm-yes').onclick = function() {
+                popup.style.display = 'none';
+                form.submit();
+            };
+            document.getElementById('confirm-no').onclick = function() {
+                popup.style.display = 'none';
+            };
+        });
+    });
+});
+</script>

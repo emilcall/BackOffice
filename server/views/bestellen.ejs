@@ -1,0 +1,80 @@
+<section class="bestellen-container"
+  <% if (typeof error !== "undefined" && error) { %>
+    data-error="<%- encodeURIComponent(error) %>"
+  <% } %>
+>
+    <div id="popup-error" style="display:none;"></div>
+    
+    <div class="bestellen-header-row">
+        <h2 class="bestellen-title">Bestellen</h2>
+        <button type="submit" form="orderForm" class="btn-primary">Bestelling plaatsen</button>
+    </div>
+    <form action="/orders/add" method="POST" id="orderForm">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product ID</th>
+                    <th>Product</th>
+                    <th>Aantal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% products.forEach(product => { %>
+                <tr>
+                    <td><%= product.id %></td>
+                    <td><%= product.name %> (€<%= product.price.toFixed(2) %>)</td>
+                    <td>
+                    <div class="counter-group">
+                        <button type="button" class="counter-btn" onclick="decrement('<%= product.id %>')">-</button>
+                        <input 
+                        type="number" 
+                        name="quantities[p<%= product.id %>]" 
+                        id="qty-<%= product.id %>" 
+                        min="0" 
+                        value="0" 
+                        readonly
+                        >
+                        <button type="button" class="counter-btn" onclick="increment('<%= product.id %>')">+</button>
+                    </div>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </form>
+    <script>
+        function increment(id) {
+            const input = document.getElementById('qty-' + id);
+            input.value = parseInt(input.value) + 1;
+        }
+        function decrement(id) {
+            const input = document.getElementById('qty-' + id);
+            if (parseInt(input.value) > 0) {
+                input.value = parseInt(input.value) - 1;
+            }
+        }
+        function validateOrder() {
+            const inputs = document.querySelectorAll('input[type="number"][id^="qty-"]');
+            let hasItem = false;
+            inputs.forEach(input => {
+                if (parseInt(input.value) > 0) {
+                    hasItem = true;
+                }
+            });
+            if (!hasItem) {
+                alert("Selecteer minstens één product om te bestellen.");
+                return false;
+            }
+            return true;
+        }
+            document.addEventListener("DOMContentLoaded", function() {
+            const container = document.querySelector('.bestellen-container');
+            const popup = document.getElementById('popup-error');
+            if (container && container.dataset.error && popup) {
+                popup.textContent = decodeURIComponent(container.dataset.error);
+                popup.style.display = "block";
+                setTimeout(() => popup.style.display = "none", 4000); // verdwijnt na 4 seconden
+            }
+        });
+    </script>
+</section>

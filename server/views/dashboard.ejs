@@ -1,0 +1,33 @@
+<section class="dashboard-container">
+    <div class="dashboard-header-row">
+        <h2 class="dashboard-title">Dashboard</h2>
+        <div>
+            <h2><%= currentDay %> <%= currentMonthName %> <%= currentYear %></h2>
+        </div>
+    </div>
+    <div class="dashboard-stats">
+        <div class="dashboard-card">
+            <h3>Bestellingen Vandaag</h3> 
+            <div class="dashboard-value">
+                <span class="dashboard-label-completed">Afgewerkt:</span>
+                <span class="dashboard-number"><%= ordersTodayCompleted %></span>
+            </div>
+            <div class="dashboard-value">
+                <span class="dashboard-label-pending">Niet afgewerkt:</span>
+                <span class="dashboard-number"><%= ordersTodayOpen %></span>
+            </div>
+        </div>
+        <div class="dashboard-card">
+            <h3>Bestellingen Deze Maand</h3>
+            <div class="dashboard-value">
+                <span class="dashboard-number"><%= ordersThisMonth %></span>
+            </div>
+        </div>
+        <div class="dashboard-card">
+            <h3>Omzet Dit Jaar</h3>
+            <div class="dashboard-value">
+                <span class="dashboard-number">€<%= revenueThisYear %></span>
+            </div>
+        </div>
+    </div>
+</section>

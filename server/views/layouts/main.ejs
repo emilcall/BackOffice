@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Sushi Restaurant Back Office</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="header-row">
+            <nav>
+                <ul class="main-nav-links">
+                    <li><a href="/home">Home</a></li>
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/categories">Categorieën</a></li>
+                    <li><a href="/bestellen">Bestellen</a></li>
+                    <li><a href="/orders">Bestellingen</a></li>
+                </ul>
+            </nav>
+            <% if (user) { %>
+                <a href="/logout" class="logout-btn header-logout-btn">Logout</a>
+            <% } %>
+        </div>
+        <h1>Sushi Restaurant Back Office</h1>
+    </header>
+    <main>
+        <%- body %>
+    </main>
+    <footer>
+        <p>&copy; 2025 Sushi Restaurant. All rights reserved.</p>
+    </footer>
+</body>
+</html>

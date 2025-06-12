@@ -1,0 +1,111 @@
+<section class="products-container"
+  <%= (typeof message !== "undefined" && message) ? `data-message="${encodeURIComponent(message)}"` : "" %>
+  <%= (typeof error !== "undefined" && error) ? `data-error="${encodeURIComponent(error)}"` : "" %>
+>
+    <div id="popup-message" style="display:none;"></div>
+    <div id="popup-error" style="display:none;"></div>
+    <div id="confirm-popup" style="display:none;">
+        <div class="popup-content">
+            <p id="confirm-message">Weet je zeker dat je dit wilt verwijderen?</p>
+            <button id="confirm-yes" class="btn-primary">Ja</button>
+            <button id="confirm-no" class="btn-primary">Nee</button>
+        </div>
+    </div>
+    <div class="product-header">
+        <h2 class="products-title">Producten</h2>
+        <a href="/categories" class="btn-primary">Terug</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Afbeelding</th>
+                <th>Naam</th>
+                <th>Beschrijving</th>
+                <th>Prijs</th>
+                <th>Categorie</th>
+                <th>Afbeelding-link toevoegen</th>
+                <th>Verwijderen</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (products.length === 0) { %>
+                <tr>
+                    <td colspan="7">Geen producten gevonden.</td>
+                </tr>
+            <% } else { %>
+                <% products.forEach(product => { %>
+                    <tr>
+                        <td style="text-align:center;">
+                            <% if (product.image_url) { %>
+                                <img src="<%= product.image_url %>" alt="Productafbeelding" style="max-width:60px; max-height:60px; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.10);">
+                            <% } else { %>
+                                <span style="color: #aaa;">Geen afbeelding</span>
+                            <% } %>
+                        </td>
+                        <td><%= product.name %></td>
+                        <td><%= product.description %></td>
+                        <td>€<%= product.price.toFixed(2) %></td>
+                        <td><%= product.categories.name %></td>
+                        <td>
+                            <form action="/products/imageurl/<%= product.id %>" method="POST" style="display:flex; flex-direction:column; gap:6px;">
+                                <input type="url" name="image_url" placeholder="Afbeeldingslink" value="<%= product.image_url || '' %>" required style="padding:6px; border-radius:6px; border:1px solid #bfa13a;">
+                                <button type="submit" class="btn-primary" style="padding:4px 12px;">Opslaan</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="/products/delete/<%= product.id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn-primary delete-btn">Verwijder</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+    <form action="/products/add" method="POST" class="add-product-form">
+        <input type="text" name="name" placeholder="Nieuw product" required>
+        <input type="text" name="description" placeholder="Beschrijving" required>
+        <input type="number" name="price" placeholder="Prijs" required min="0" step="0.01">
+        <select name="category_id" required>
+            <option value="">Kies categorie</option>
+            <% categories.forEach(cat => { %>
+                <option value="<%= cat.id %>"><%= cat.name %></option>
+            <% }) %>
+        </select>
+        <button type="submit" class="btn-primary">Toevoegen</button>
+    </form>
+</section>
+    
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const container = document.querySelector('.products-container');
+    const popupMessage = document.getElementById('popup-message');
+    const popupError = document.getElementById('popup-error');
+    if (container && container.dataset.message && popupMessage) {
+        popupMessage.textContent = decodeURIComponent(container.dataset.message);
+        popupMessage.style.display = "block";
+        setTimeout(() => popupMessage.style.display = "none", 4000);
+    }
+    if (container && container.dataset.error && popupError) {
+        popupError.textContent = decodeURIComponent(container.dataset.error);
+        popupError.style.display = "block";
+        setTimeout(() => popupError.style.display = "none", 4000);
+    }
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            const popup = document.getElementById('confirm-popup');
+            popup.style.display = 'flex';
+            document.getElementById('confirm-yes').onclick = function() {
+                popup.style.display = 'none';
+                form.submit();
+            };
+            document.getElementById('confirm-no').onclick = function() {
+                popup.style.display = 'none';
+            };
+        });
+    });
+});
+</script>
