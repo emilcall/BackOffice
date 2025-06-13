@@ -95,10 +95,26 @@ await supabase
   res.redirect("/products?message=" + encodeURIComponent("Afbeelding succesvol geüpload!"));
 });
 
-router.post("/products/delete-images/:fileName", async (req, res) => {
-  const { fileName } = req.params;
+router.post("/products/delete-image/:id", async (req, res) => {
+  const { id } = req.params;
 
-  // 1. Verwijder het bestand uit Supabase Storage
+  // Haal het product op om de bestandsnaam te weten
+  const { data: product, error: fetchError } = await supabase
+    .from("products")
+    .select("picture")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !product || !product.picture) {
+    res.redirect("/products?error=" + encodeURIComponent("Geen afbeelding gevonden om te verwijderen"));
+    return;
+  }
+
+  // Extract bestandsnaam uit de URL
+  const urlParts = product.picture.split("/");
+  const fileName = urlParts[urlParts.length - 1];
+
+  // Verwijder uit Supabase Storage
   const { error: storageError } = await supabase
     .storage
     .from("product-images")
@@ -109,14 +125,11 @@ router.post("/products/delete-images/:fileName", async (req, res) => {
     return;
   }
 
-  // 2. Stel de public URL samen
-  const publicUrl = `https://gdmkrwfvggiwpuhwhvog.supabase.co/storage/v1/object/public/product-images/${fileName}`;
-
-  // 3. Verwijder de URL uit de database bij het juiste product
+  // Verwijder de URL uit de database
   await supabase
     .from("products")
     .update({ picture: null })
-    .eq("picture", publicUrl);
+    .eq("id", id);
 
   res.redirect("/products?message=" + encodeURIComponent("Afbeelding succesvol verwijderd!"));
 });

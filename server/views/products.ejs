@@ -40,7 +40,7 @@
                                 var fileName = product.picture.split('/').pop();
                             %>
                                 <img src="<%= product.picture %>" alt="Productafbeelding" style="max-width:60px; max-height:60px;">
-                                <form action="/products/delete-images/<%= fileName %>" method="POST" style="margin-top:6px;">
+                                <form action="/products/delete-image/<%= product.id %>" method="POST" style="margin-top:6px;">
                                     <button type="submit" class="btn-primary delete-btn" style="padding:4px 12px; background:#e74c3c;">Verwijder afbeelding</button>
                                 </form>
                             <% } else { %>
