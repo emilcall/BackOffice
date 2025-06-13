@@ -354,6 +354,15 @@ button.btn-primary:hover {
     box-shadow: 0 4px 24px rgba(0,0,0,0.18);
 }
 
+.product-container {
+  background: #f0f0f0;
+  padding: 24px;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 24px;
+}
+
 .afgewerkt-header-row,
 .bestellen-header-row,
 .categories-header-row,
