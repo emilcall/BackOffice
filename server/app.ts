@@ -7,7 +7,7 @@ import session from "express-session";
 import { Analytics } from "@vercel/analytics/next"
 
 const app: Application = express();
-const PORT: number = parseInt(process.env.PORT || "3000", 10);
+const PORT: number = parseInt(<string>process.env.PORT, 10) || 3000;
 dotenv.config();
 
 app.use(session({
