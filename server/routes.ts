@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction } from "express";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import { isAuthenticated } from "./middleware/auth";
+import multer from "multer";
+import path from "path";
 dotenv.config();
 
 // Extend express-session types to include 'user' property
@@ -48,6 +50,75 @@ router.get("/logout", (req: Request, res: Response): void => {
 router.use((req, res, next) => {
   if (req.path === "/login" || req.path === "/logout") return next();
   isAuthenticated(req, res, next);
+});
+
+// Multer memory storage
+const upload = multer({ storage: multer.memoryStorage() });
+
+router.post("/products/imageupload/:id", upload.single("image"), async (req, res): Promise<void> => {
+  const { id } = req.params;
+  if (!req.file) {
+    res.redirect("/products?error=" + encodeURIComponent("Geen afbeelding geselecteerd"));
+    return;
+  }
+
+  // Unieke bestandsnaam
+  const fileExt = req.file.originalname.split('.').pop();
+  const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${fileExt}`;
+
+  // Upload naar Supabase Storage
+  const { data, error } = await supabase.storage
+    .from("product-images")
+    .upload(fileName, req.file.buffer, {
+      contentType: req.file.mimetype,
+      upsert: false
+    });
+
+if (error) {
+  console.error("Supabase upload error:", error);
+  res.redirect("/products?error=" + encodeURIComponent("Upload naar Supabase Storage mislukt: " + error.message));
+  return;
+}
+
+// Haal de publieke URL op
+const { data: publicUrlData } = supabase
+  .storage
+  .from("product-images")
+  .getPublicUrl(fileName);
+
+// Sla de publieke URL op in je database
+await supabase
+  .from("products")
+  .update({ picture: publicUrlData.publicUrl })
+  .eq("id", id);
+
+  res.redirect("/products?message=" + encodeURIComponent("Afbeelding succesvol geüpload!"));
+});
+
+router.post("/products/delete-images/:fileName", async (req, res) => {
+  const { fileName } = req.params;
+
+  // 1. Verwijder het bestand uit Supabase Storage
+  const { error: storageError } = await supabase
+    .storage
+    .from("product-images")
+    .remove([fileName]);
+
+  if (storageError) {
+    res.redirect("/products?error=" + encodeURIComponent("Afbeelding kon niet verwijderd worden"));
+    return;
+  }
+
+  // 2. Stel de public URL samen
+  const publicUrl = `https://gdmkrwfvggiwpuhwhvog.supabase.co/storage/v1/object/public/product-images/${fileName}`;
+
+  // 3. Verwijder de URL uit de database bij het juiste product
+  await supabase
+    .from("products")
+    .update({ picture: null })
+    .eq("picture", publicUrl);
+
+  res.redirect("/products?message=" + encodeURIComponent("Afbeelding succesvol verwijderd!"));
 });
 
 // ---------- HOME ----------
@@ -215,7 +286,7 @@ router.get("/products", async (req: Request, res: Response): Promise<void> => {
   try {
     const { data: products, error } = await supabase
       .from("products")
-      .select("id, name, description, price, category_id, image_url, categories(name)")
+      .select("id, name, description, price, category_id, picture, categories(name)")
       .order("category_id", { ascending: true })
       .order("id", { ascending: true });
     if (error) throw error;
@@ -283,17 +354,6 @@ router.post("/products/delete/:id", async (req: Request, res: Response): Promise
   }
 });
 
-router.post("/products/imageurl/:id", async (req, res) => {
-  const { id } = req.params;
-  const { image_url } = req.body;
-  if (!image_url || typeof image_url !== "string" || !/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(image_url)) {
-    res.redirect("/products?error=" + encodeURIComponent("Ongeldige afbeelding-url"));
-    return;
-  }
-  await supabase.from("products").update({ image_url }).eq("id", id);
-  res.redirect("/products?message=" + encodeURIComponent("Afbeelding-link succesvol aangepast!"));
-});
-
 // ---------- CATEGORIES ----------
 router.get("/categories", async (req: Request, res: Response): Promise<void> => {
   try {
@@ -320,7 +380,7 @@ router.get("/categories/:id/products", async (req: Request, res: Response) => {
   try {
     const { data: products, error } = await supabase
       .from("products")
-      .select("id, name, description, price, category_id, image_url, categories(name)")
+      .select("id, name, description, price, category_id, picture, categories(name)")
       .eq("category_id", id)
       .order("id", { ascending: true });
     if (error) throw error;
@@ -580,7 +640,7 @@ router.get("/api/products", async (req: Request, res: Response) => {
     const categoryId = req.query.category_id;
     let query = supabase
       .from("products")
-      .select("id, name, description, price, category_id, image_url")
+      .select("id, name, description, price, category_id, picture")
       .order("id", { ascending: true });
     if (categoryId) {
       query = query.eq("category_id", categoryId);
